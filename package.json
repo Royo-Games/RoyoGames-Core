@@ -1,0 +1,12 @@
+{
+  "name": "com.royogames.core",
+  "version": "0.0.1",
+  "displayName": "Royo Games Core",
+  "description": "Royo Games Core Package",
+  "unity": "2022.3",
+  "author": {
+    "name": "Royo Games",
+    "email": "royogames2020@gmail.com",
+    "url": "https://royogames.com/"
+  }
+}
