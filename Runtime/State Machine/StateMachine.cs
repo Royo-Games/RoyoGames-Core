@@ -45,9 +45,6 @@ public class StateMachine
     {
         var layer = layers[layerIndex];
 
-        if (layer.CurrentState == state)
-            return;
-
         layer.PreviousState = layer.CurrentState;
         layer.CurrentState = state;
 
