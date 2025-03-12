@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class StateMachine
 {
     private List<LayerInfo> layers;
     public int LayerCount => layers.Count;
     public Action<int, IState> OnChangedState;
+
+    private bool isChanging;
 
     private class LayerInfo
     {
@@ -43,15 +46,29 @@ public class StateMachine
     }
     public void ChangeState(int layerIndex, IState state)
     {
-        var layer = layers[layerIndex];
+        if (isChanging)
+        {
+            throw new Exception("Nested state change attempted! ChangeState cannot be called recursively during state transitions.");
+        }
 
-        layer.PreviousState = layer.CurrentState;
-        layer.CurrentState = state;
+        isChanging = true;
 
-        layer.PreviousState?.OnExit(layerIndex, this);
-        layer.CurrentState?.OnEnter(layerIndex, this);
+        try
+        {
+            var layer = layers[layerIndex];
 
-        OnChangedState?.Invoke(layerIndex, state);
+            layer.PreviousState = layer.CurrentState;
+            layer.CurrentState = state;
+
+            layer.PreviousState?.OnExit(layerIndex, this);
+            layer.CurrentState?.OnEnter(layerIndex, this);
+
+            OnChangedState?.Invoke(layerIndex, state);
+        }
+        finally
+        {
+            isChanging = false;
+        }
     }
     public void SetDefaultState(int layerIndex, IState state)
     {

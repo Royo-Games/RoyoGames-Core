@@ -3,10 +3,10 @@ using System.Text;
 
 public static class TimeExtentions
 {
-    public static string dayShort = "d";
-    public static string hoursShort = "h";
-    public static string minuntesShort = "m";
-    public static string secondsShort = "s";
+    public static string DayShort = "d";
+    public static string HoursShort = "h";
+    public static string MinuntesShort = "m";
+    public static string SecondsShort = "s";
 
     public static string ToTimeString(this int seconds, int maxUnit = 4)
     {
@@ -20,7 +20,7 @@ public static class TimeExtentions
 
         if (count < maxUnit && timeSpan.Days >= 1)
         {
-            builder.AppendFormat("{0}{1}", timeSpan.Days, dayShort);
+            builder.AppendFormat("{0}{1}", timeSpan.Days, DayShort);
             count++;
         }
 
@@ -29,7 +29,7 @@ public static class TimeExtentions
             if (timeSpan.Days >= 1)
                 builder.Append(" ");
 
-            builder.AppendFormat(" {0}{1}", timeSpan.Hours, hoursShort);
+            builder.AppendFormat(" {0}{1}", timeSpan.Hours, HoursShort);
             count++;
         }
 
@@ -38,7 +38,7 @@ public static class TimeExtentions
             if (timeSpan.Hours >= 1)
                 builder.Append(" ");
 
-            builder.AppendFormat(" {0}{1}", timeSpan.Minutes, minuntesShort);
+            builder.AppendFormat(" {0}{1}", timeSpan.Minutes, MinuntesShort);
             count++;
         }
 
@@ -47,12 +47,12 @@ public static class TimeExtentions
             if (timeSpan.Minutes >= 1)
                 builder.Append(" ");
 
-            builder.AppendFormat(" {0}{1}", timeSpan.Seconds, secondsShort);
+            builder.AppendFormat(" {0}{1}", timeSpan.Seconds, SecondsShort);
         }
 
         if (builder.Length == 0)
         {
-            builder.AppendFormat("0{0}", secondsShort);
+            builder.AppendFormat("0{0}", SecondsShort);
         }
 
         return builder.ToString();
