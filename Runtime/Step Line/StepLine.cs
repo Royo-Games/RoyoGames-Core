@@ -69,13 +69,13 @@ public class StepLine : MonoBehaviour
 
     public virtual void StartStepLine()
     {
+        ResetStepLine();
         UpdateStepList();
         NextStep();
     }
 
     public virtual void ResetStepLine()
     {
-        Steps.Clear();
         CurrentStepIndex = startStepIndex;
         nextStepIndex = startStepIndex;
         CurrentStep = null;
@@ -83,8 +83,6 @@ public class StepLine : MonoBehaviour
 
     public virtual void UpdateStepList()
     {
-        ResetStepLine();
-
         Steps.Clear();
         GetComponentsInChildren(Steps);
 
