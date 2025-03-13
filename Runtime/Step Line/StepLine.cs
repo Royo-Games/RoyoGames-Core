@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -85,21 +86,15 @@ public class StepLine : MonoBehaviour
     {
         ResetStepLine();
 
-        StepBase[] steps = GetComponentsInChildren<StepBase>();
+        Steps.Clear();
+        GetComponentsInChildren(Steps);
 
-        if (steps != null)
-        {
-            foreach (StepBase step in steps)
-            {
-                step.StepLine = this;
-            }
-        }
-
-        Steps.AddRange(steps);
+        foreach (StepBase step in Steps)
+            step.StepLine = this;
     }
 
     public virtual void NextStep()
-     {
+    {
         if (Steps == null || Steps.Count == 0)
             return;
 
