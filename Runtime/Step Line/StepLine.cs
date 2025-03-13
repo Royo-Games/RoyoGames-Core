@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -113,6 +112,7 @@ public class StepLine : MonoBehaviour
         ChangeStep(nextStepIndex);
         nextStepIndex++;
     }
+
     private void ChangeStep(int stepIndex)
     {
         if (isChanging)
