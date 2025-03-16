@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 
 [System.Serializable]
-public abstract class SavableData
+public class SavableData
 {
     [HideInInspector]
     public int DataVersionNumber;
+
+    public string test;
 }
