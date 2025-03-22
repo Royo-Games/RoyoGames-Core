@@ -5,12 +5,12 @@ public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, 
     [SerializeField] string _dataKey;
     [SerializeField] private int _dataVersionNumber;
     [Space]
-    [SerializeField] T _data;
+    [SerializeField] T _savedData;
 
-    public T Data
+    public T SavedData
     {
-        get { return _data; }
-        private set { _data = value; }
+        get { return _savedData; }
+        private set { _savedData = value; }
     }
 
     public int DataVersionNumber => _dataVersionNumber;
@@ -28,16 +28,16 @@ public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, 
     public virtual void Load()
     {
         var data = JsonUtility.FromJson<T>(PlayerPrefs.GetString(_dataKey, ""));
-        if (data != null) Data = data;
+        if (data != null) SavedData = data;
     }
 
     public virtual void Save()
     {
-        if (Data == null) return;
+        if (SavedData == null) return;
 
-        Data.DataVersionNumber = DataVersionNumber;
+        SavedData.DataVersionNumber = DataVersionNumber;
 
-        PlayerPrefs.SetString(_dataKey, JsonUtility.ToJson(Data));
+        PlayerPrefs.SetString(_dataKey, JsonUtility.ToJson(SavedData));
         PlayerPrefs.Save();
     }
 
