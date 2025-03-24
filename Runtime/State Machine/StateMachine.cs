@@ -29,7 +29,7 @@ public class StateMachine
     {
         for (int i = 0; i < layers.Count; i++)
         {
-            ResetState(i);
+            ChangeStateToDefault(i);
         }
     }
     public IState GetCurrentState(int layerIndex)
@@ -70,13 +70,18 @@ public class StateMachine
             isChanging = false;
         }
     }
+    
+    public void ChangeStateToDefault(int layerIndex)
+    {
+        ChangeState(layerIndex, layers[layerIndex].DefaultState);
+    }
+    public void ChangeStateToPrevious(int layerIndex)
+    {
+        ChangeState(layerIndex, layers[layerIndex].PreviousState);
+    }
     public void SetDefaultState(int layerIndex, IState state)
     {
         layers[layerIndex].DefaultState = state;
-    }
-    public void ResetState(int layerIndex)
-    {
-        ChangeState(layerIndex, layers[layerIndex].DefaultState);
     }
     public void Update()
     {
