@@ -75,10 +75,12 @@ public class StateMachine
     {
         ChangeState(layerIndex, layers[layerIndex].DefaultState);
     }
+
     public void ChangeStateToPrevious(int layerIndex)
     {
         ChangeState(layerIndex, layers[layerIndex].PreviousState);
     }
+
     public void SetDefaultState(int layerIndex, IState state)
     {
         layers[layerIndex].DefaultState = state;
