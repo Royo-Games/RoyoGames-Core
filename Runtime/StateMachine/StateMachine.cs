@@ -41,8 +41,19 @@ public class StateMachine
             PreviousState = CurrentState;
             CurrentState = state;
 
-            PreviousState?.OnExit(this);
-            CurrentState?.OnEnter(this);
+            if (PreviousState != null)
+            {
+                PreviousState.OnExit();
+                PreviousState.StateMachine = null;
+            }
+
+
+            if (CurrentState != null)
+            {
+                CurrentState.StateMachine = this;
+                CurrentState.OnEnter();
+            }
+
 
             OnChangedState?.Invoke(state);
         }
@@ -70,21 +81,21 @@ public class StateMachine
         if (CurrentState == null)
             return;
 
-        CurrentState.OnUpdate(this);
+        CurrentState.OnUpdate();
     }
     public void FixedUpdate()
     {
         if (CurrentState == null)
             return;
 
-        CurrentState.OnFixedUpdate(this);
+        CurrentState.OnFixedUpdate();
     }
     public void LateUpdate()
     {
         if (CurrentState == null)
             return;
 
-        CurrentState.OnLateUpdate(this);
+        CurrentState.OnLateUpdate();
     }
 
     public void StartStep(int startStepIndex)

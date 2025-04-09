@@ -4,9 +4,10 @@ using UnityEngine;
 
 public interface IState
 {
-    public void OnEnter(StateMachine stateMachine);
-    public void OnExit(StateMachine stateMachine);
-    public void OnUpdate(StateMachine stateMachine);
-    public void OnFixedUpdate(StateMachine stateMachine);
-    public void OnLateUpdate(StateMachine stateMachine);
+    public StateMachine StateMachine { get; set; }
+    public void OnEnter();
+    public void OnExit();
+    public void OnUpdate();
+    public void OnFixedUpdate();
+    public void OnLateUpdate();
 }

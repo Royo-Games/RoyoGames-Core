@@ -2,23 +2,25 @@ using UnityEngine;
 
 public class State : MonoBehaviour, IState
 {
-    public virtual void OnEnter(StateMachine stateMachine)
+    public StateMachine StateMachine { get; set; }
+
+    public virtual void OnEnter()
     {
     }
 
-    public virtual void OnExit(StateMachine stateMachine)
+    public virtual void OnExit()
     {
     }
 
-    public virtual void OnFixedUpdate(StateMachine stateMachine)
+    public virtual void OnFixedUpdate()
     {
     }
 
-    public virtual void OnLateUpdate(StateMachine stateMachine)
+    public virtual void OnLateUpdate()
     {
     }
 
-    public virtual void OnUpdate(StateMachine stateMachine)
+    public virtual void OnUpdate()
     {
     }
 }
