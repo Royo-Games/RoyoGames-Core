@@ -1,50 +1,16 @@
 using System;
-using System.Collections.Generic;
-using UnityEngine;
 
 public class StateMachine
 {
-    private List<LayerInfo> layers;
-    public int LayerCount => layers.Count;
-    public Action<int, IState> OnChangedState;
+    public Action<IState> OnChangedState;
 
     private bool isChanging;
 
-    private class LayerInfo
-    {
-        public IState DefaultState;
-        public IState PreviousState;
-        public IState CurrentState;
-    }
-    public StateMachine(int layerCount)
-    {
-        layers = new List<LayerInfo>();
+    public IState DefaultState { get; set; }
+    public IState PreviousState { get; private set; }
+    public IState CurrentState { get; private set; }
 
-        for (int i = 0; i < layerCount; i++)
-        {
-            layers.Add(new LayerInfo());
-        }
-    }
-    public void Start()
-    {
-        for (int i = 0; i < layers.Count; i++)
-        {
-            ChangeStateToDefault(i);
-        }
-    }
-    public IState GetCurrentState(int layerIndex)
-    {
-        return layers[layerIndex].CurrentState;
-    }
-    public IState GetPreviousState(int layerIndex)
-    {
-        return layers[layerIndex].PreviousState;
-    }
-    public IState GetDefaultState(int layerIndex)
-    {
-        return layers[layerIndex].DefaultState;
-    }
-    public void ChangeState(int layerIndex, IState state)
+    public void ChangeState(IState state)
     {
         if (isChanging)
         {
@@ -55,70 +21,49 @@ public class StateMachine
 
         try
         {
-            var layer = layers[layerIndex];
+            PreviousState = CurrentState;
+            CurrentState = state;
 
-            layer.PreviousState = layer.CurrentState;
-            layer.CurrentState = state;
+            PreviousState?.OnExit(this);
+            CurrentState?.OnEnter(this);
 
-            layer.PreviousState?.OnExit(layerIndex, this);
-            layer.CurrentState?.OnEnter(layerIndex, this);
-
-            OnChangedState?.Invoke(layerIndex, state);
+            OnChangedState?.Invoke(state);
         }
         finally
         {
             isChanging = false;
         }
     }
-    
-    public void ChangeStateToDefault(int layerIndex)
+
+    public void ChangeStateToDefault()
     {
-        ChangeState(layerIndex, layers[layerIndex].DefaultState);
+        ChangeState(DefaultState);
     }
 
-    public void ChangeStateToPrevious(int layerIndex)
+    public void ChangeStateToPrevious()
     {
-        ChangeState(layerIndex, layers[layerIndex].PreviousState);
+        ChangeState(PreviousState);
     }
 
-    public void SetDefaultState(int layerIndex, IState state)
-    {
-        layers[layerIndex].DefaultState = state;
-    }
     public void Update()
     {
-        for (int i = 0; i < layers.Count; i++)
-        {
-            var layer = layers[i];
+        if (CurrentState == null)
+            return;
 
-            if (layer.CurrentState == null)
-                continue;
-
-            layer.CurrentState.OnUpdate(i, this);
-        }
+        CurrentState.OnUpdate(this);
     }
     public void FixedUpdate()
     {
-        for (int i = 0; i < layers.Count; i++)
-        {
-            var layer = layers[i];
+        if (CurrentState == null)
+            return;
 
-            if (layer.CurrentState == null)
-                continue;
-
-            layer.CurrentState.OnFixedUpdate(i, this);
-        }
+        CurrentState.OnFixedUpdate(this);
     }
     public void LateUpdate()
     {
-        for (int i = 0; i < layers.Count; i++)
-        {
-            var layer = layers[i];
+        if (CurrentState == null)
+            return;
 
-            if (layer.CurrentState == null)
-                continue;
-
-            layer.CurrentState.OnLateUpdate(i, this);
-        }
+        CurrentState.OnLateUpdate(this);
     }
 }

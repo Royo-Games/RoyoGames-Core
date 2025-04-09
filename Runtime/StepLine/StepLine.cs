@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 public class StepLine : MonoBehaviour
 {
-    private StateMachine stateMachine = new StateMachine(1);
+    private StateMachine stateMachine = new StateMachine();
 
     [SerializeField] private int startStepIndex;
     [SerializeField] private bool autoStart;
@@ -100,7 +100,7 @@ public class StepLine : MonoBehaviour
             if (CurrentStep != null)
             {
                 CurrentStep = null;
-                stateMachine.ChangeState(0, null);
+                stateMachine.ChangeState(null);
                 onCompletedStepLineEvent?.Invoke();
             }
 
@@ -125,7 +125,7 @@ public class StepLine : MonoBehaviour
             CurrentStep = Steps[stepIndex];
             CurrentStepIndex = stepIndex;
 
-            stateMachine.ChangeState(0, CurrentStep);
+            stateMachine.ChangeState(CurrentStep);
         }
         finally
         {

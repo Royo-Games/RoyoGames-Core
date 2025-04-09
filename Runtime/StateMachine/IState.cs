@@ -4,9 +4,9 @@ using UnityEngine;
 
 public interface IState
 {
-    public void OnEnter(int layerIndex,StateMachine stateMachine);
-    public void OnExit(int layerIndex,StateMachine stateMachine);
-    public void OnUpdate(int layerIndex, StateMachine stateMachine);
-    public void OnFixedUpdate(int layerIndex, StateMachine stateMachine);
-    public void OnLateUpdate(int layerIndex, StateMachine stateMachine);
+    public void OnEnter(StateMachine stateMachine);
+    public void OnExit(StateMachine stateMachine);
+    public void OnUpdate(StateMachine stateMachine);
+    public void OnFixedUpdate(StateMachine stateMachine);
+    public void OnLateUpdate(StateMachine stateMachine);
 }

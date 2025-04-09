@@ -3,6 +3,12 @@ using UnityEngine;
 
 public class EventInvoker : MonoBehaviour
 {
+#if UNITY_EDITOR
+    [Space]
+    [SerializeField] protected bool _showGizmos;
+    [SerializeField] protected Color _gizmoColor = Color.yellow;
+#endif
+
     [Space]
     [SerializeField] protected List<EventListener> _eventListeners;
 
@@ -29,4 +35,17 @@ public class EventInvoker : MonoBehaviour
     {
         _eventListeners.Clear();
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        if (_eventListeners == null || !_showGizmos)
+            return;
+
+        Gizmos.color = _gizmoColor;
+        Gizmos.DrawSphere(transform.position, 0.5f);
+
+        GizmosUtility.Drawlines(transform.position, _eventListeners);
+    }
+#endif
 }
