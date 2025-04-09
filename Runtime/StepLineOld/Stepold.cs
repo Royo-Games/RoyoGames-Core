@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class StepBase : MonoBehaviour, IState
+public abstract class Stepold : MonoBehaviour, IState
 {
     public StepLine StepLine { get; set; }
 
