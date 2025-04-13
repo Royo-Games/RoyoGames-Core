@@ -7,13 +7,15 @@ public static class RoyoMath
 {
     public static float NormalizeAngle(float angle)
     {
-        angle = angle % 360;
+        angle %= 360f;
 
-        if (angle < 0)
+        if (angle < -180f)
             angle += 360f;
+        else if (angle > 180f)
+            angle -= 360f;
+
         return angle;
     }
-
     public static int CoordToIndex(Vector2Int coord, Vector2Int Size)
     {
         return coord.y * Size.y + coord.x;
