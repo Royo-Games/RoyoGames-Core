@@ -21,7 +21,8 @@ public static class RoyoMath
         {
             angle -= 360f;
         }
-        else if (angle <= -180f)
+        else
+        if (angle < -180f)
         {
             angle += 360f;
         }
