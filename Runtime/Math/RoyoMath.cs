@@ -5,23 +5,30 @@ using UnityEngine;
 
 public static class RoyoMath
 {
-    public static float NormalizeAngle(float angle)
+    public static float NormalizeAngle360(float angle)
     {
-        angle %= 360;
-
-        if (angle > 180)
-        {
-            return angle - 360;
-        }
-        else if (angle < -180)
-        {
-            return angle + 360;
-        }
-        else
-        {
-            return angle;
-        }
+        angle %= 360f;
+        if (angle < 0)
+            angle += 360f;
+        return angle;
     }
+
+    public static float NormalizeAngle180(float angle)
+    {
+        angle %= 360f;
+
+        if (angle > 180f)
+        {
+            angle -= 360f;
+        }
+        else if (angle <= -180f)
+        {
+            angle += 360f;
+        }
+
+        return angle;
+    }
+
     public static int CoordToIndex(Vector2Int coord, Vector2Int Size)
     {
         return coord.y * Size.y + coord.x;
