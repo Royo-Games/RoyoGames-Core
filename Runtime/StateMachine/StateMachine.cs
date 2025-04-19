@@ -1,134 +1,219 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-public class StateMachine
+public class StateMachine : StateMachine<string>
 {
-    public Action<IState> OnChangedState;
-    public Action<StateMachine> OnCompletedSteps;
+    public StateMachine(Parameters parameters) : base(parameters)
+    {
+    }
+}
 
-    public IState DefaultState { get; set; }
-    public IState PreviousState { get; private set; }
-    public IState CurrentState { get; private set; }
+public class StateMachine<TStateId>
+{
+    public IState<TStateId> CurrentState { get; private set; }
+    public Action<IState<TStateId>> OnEnterState { get; set; }
+    public Action<IState<TStateId>> OnExitState { get; set; }
 
-    public int CurrentStepIndex => _currentStepIndex;
-
-    public List<IState> Steps;
-
-    private bool _isChanging;
-    private int _currentStepIndex;
-    private bool _isCompletedSteps;
-
-    private Queue<IState> pendingStates;
+    private readonly Dictionary<TStateId, IState<TStateId>> _states = new();
+    private readonly Dictionary<TStateId, List<LocalTransition<TStateId>>> _transitions = new();
+    private readonly List<GlobalTransition<TStateId>> _globalTransitions = new();
+    private readonly Queue<TStateId> _pendingStates = new();
+    private bool _isTransitioning;
+    public Parameters Parameters { get; private set; }
 
     public StateMachine()
     {
-        Steps = new List<IState>();
-        pendingStates = new Queue<IState>();
+        Parameters = new Parameters();
     }
 
-    public void ChangeState(IState state)
+    public StateMachine(Parameters parameters)
     {
-        if (_isChanging)
-        {
-            pendingStates.Enqueue(state);
-            return;
-        }
-
-        _isChanging = true;
-
-        try
-        {
-            PreviousState = CurrentState;
-            CurrentState = state;
-
-            if (PreviousState != null)
-            {
-                PreviousState.OnExit();
-                PreviousState.StateMachine = null;
-            }
-
-
-            if (CurrentState != null)
-            {
-                CurrentState.StateMachine = this;
-                CurrentState.OnEnter();
-            }
-
-
-            OnChangedState?.Invoke(state);
-        }
-        finally
-        {
-            _isChanging = false;
-
-            while (pendingStates.Count > 0)
-                ChangeState(pendingStates.Dequeue());
-        }
-    }
-
-    public void ChangeStateToDefault()
-    {
-        ChangeState(DefaultState);
-    }
-
-    public void ChangeStateToPrevious()
-    {
-        ChangeState(PreviousState);
+        Parameters = parameters;
     }
 
     public void Update()
     {
-        if (CurrentState == null)
-            return;
-
-        CurrentState.OnUpdate();
-    }
-    public void FixedUpdate()
-    {
-        if (CurrentState == null)
-            return;
-
-        CurrentState.OnFixedUpdate();
-    }
-    public void LateUpdate()
-    {
-        if (CurrentState == null)
-            return;
-
-        CurrentState.OnLateUpdate();
+        HandleTransitions();
+        CurrentState?.OnUpdate();
     }
 
-    public void StartStep(int startStepIndex)
-    {
-        _isCompletedSteps = false;
-        SetStep(startStepIndex);
-    }
+    public void LateUpdate() => CurrentState?.OnLateUpdate();
+    public void FixedUpdate() => CurrentState?.OnFixedUpdate();
 
-    public void NextStep()
+    private void HandleTransitions()
     {
-        if (Steps == null || Steps.Count == 0)
+        if (_isTransitioning)
             return;
 
-        int nextStepIndex = _currentStepIndex + 1;
-
-        if (nextStepIndex >= Steps.Count)
+        GlobalTransition<TStateId> globalTransition = null;
+        foreach (var t in _globalTransitions)
         {
-            if (!_isCompletedSteps)
-                OnCompletedSteps?.Invoke(this);
+            if (t.Condition.Evaluate(Parameters))
+            {
+                globalTransition = t;
+                break;
+            }
+        }
 
-            _isCompletedSteps = true;
+        if (globalTransition != null && CurrentState != null
+            && !globalTransition.ToState.Equals(CurrentState.StateID))
+        {
+            ChangeState(globalTransition.ToState);
             return;
         }
 
-        SetStep(nextStepIndex);
-    }
-
-    private void SetStep(int stepIndex)
-    {
-        if (Steps == null || Steps.Count == 0 || stepIndex < 0 || stepIndex >= Steps.Count)
+        if (CurrentState == null)
             return;
 
-        _currentStepIndex = stepIndex;
-        ChangeState(Steps[_currentStepIndex]);
+        if (!_transitions.TryGetValue(CurrentState.StateID, out var list))
+            return;
+
+        LocalTransition<TStateId> localTransition = null;
+        foreach (var t in list)
+        {
+            if (t.Condition.Evaluate(Parameters))
+            {
+                localTransition = t;
+                break;
+            }
+        }
+
+        if (localTransition != null
+            && !localTransition.ToState.Equals(CurrentState.StateID))
+        {
+            ChangeState(localTransition.ToState);
+        }
+    }
+
+    public void SetInitState(TStateId initialStateId)
+    {
+        ChangeState(initialStateId);
+    }
+
+    public void ChangeState(TStateId stateId)
+    {
+        if (stateId == null)
+            throw new ArgumentNullException(nameof(stateId));
+        if (!_states.ContainsKey(stateId))
+            throw new InvalidOperationException($"Unregistered state: {stateId}");
+
+        _pendingStates.Enqueue(stateId);
+        if (_isTransitioning)
+            return;
+
+        _isTransitioning = true;
+        try
+        {
+            while (_pendingStates.Count > 0)
+            {
+                var nextId = _pendingStates.Dequeue();
+                var nextState = _states[nextId];
+
+                if (CurrentState != null)
+                {
+                    CurrentState.OnExit();
+                    OnExitState?.Invoke(CurrentState);
+                }
+
+                CurrentState = nextState;
+                CurrentState.OnEnter();
+                OnEnterState?.Invoke(CurrentState);
+            }
+        }
+        finally
+        {
+            _isTransitioning = false;
+        }
+    }
+
+    public void AddState(IState<TStateId> state)
+    {
+        if (_states.ContainsKey(state.StateID))
+            throw new InvalidOperationException($"State already exists: {state.StateID}");
+
+        _states[state.StateID] = state;
+    }
+
+    public void RemoveState(IState<TStateId> state)
+    {
+        if (!_states.Remove(state.StateID))
+            return;
+
+        _transitions.Remove(state.StateID);
+        var fromStates = _transitions.Keys.ToList();
+        foreach (var from in fromStates)
+        {
+            var list = _transitions[from];
+            list.RemoveAll(t => t.ToState.Equals(state.StateID));
+            if (list.Count == 0)
+                _transitions.Remove(from);
+        }
+
+        _globalTransitions.RemoveAll(t => t.ToState.Equals(state.StateID));
+
+        var remaining = _pendingStates.Where(id => !id.Equals(state.StateID)).ToList();
+        _pendingStates.Clear();
+        foreach (var id in remaining)
+            _pendingStates.Enqueue(id);
+
+        if (CurrentState != null && CurrentState.StateID.Equals(state.StateID))
+        {
+            CurrentState.OnExit();
+            CurrentState = null;
+        }
+    }
+
+    public void AddTransition(ITransition<TStateId> transition)
+    {
+        switch (transition)
+        {
+            case LocalTransition<TStateId> localTransition:
+                if (!_states.ContainsKey(localTransition.FromState) || !_states.ContainsKey(localTransition.ToState))
+                {
+                    var missing = new List<string>();
+                    if (!_states.ContainsKey(localTransition.FromState)) missing.Add($"From '{localTransition.FromState}'");
+                    if (!_states.ContainsKey(localTransition.ToState)) missing.Add($"To '{localTransition.ToState}'");
+                    throw new InvalidOperationException($"Cannot add transition, unregistered state(s): {string.Join(", ", missing)}");
+                }
+
+                if (!_transitions.TryGetValue(localTransition.FromState, out var list))
+                {
+                    list = new List<LocalTransition<TStateId>>();
+                    _transitions[localTransition.FromState] = list;
+                }
+
+                if (list.Any(t => t.ToState.Equals(localTransition.ToState) && t.Condition == transition.Condition))
+                    throw new InvalidOperationException($"Duplicate transition from '{localTransition.FromState}' to '{transition.ToState}'");
+
+                list.Add(localTransition);
+                break;
+
+            case GlobalTransition<TStateId> globalTransition:
+                if (_globalTransitions.Any(t => t.ToState.Equals(globalTransition.ToState) && t.Condition == globalTransition.Condition))
+                    throw new InvalidOperationException($"Duplicate global transition to '{globalTransition.ToState}'");
+
+                _globalTransitions.Add(globalTransition);
+                break;
+        }
+    }
+
+    public void RemoveTransition(ITransition<TStateId> transition)
+    {
+        switch (transition)
+        {
+            case LocalTransition<TStateId> localTransition:
+                if (_transitions.TryGetValue(localTransition.FromState, out var list))
+                {
+                    list.Remove(localTransition);
+                    if (list.Count == 0)
+                        _transitions.Remove(localTransition.FromState);
+                }
+                break;
+
+            case GlobalTransition<TStateId> globalTransition:
+                _globalTransitions.Remove(globalTransition);
+                break;
+        }
     }
 }
