@@ -4,9 +4,8 @@ using System.Linq;
 
 public class StateMachine : StateMachine<string>
 {
-    public StateMachine(Parameters parameters) : base(parameters)
-    {
-    }
+    public StateMachine(Parameters parameters) : base(parameters) { }
+    public StateMachine() : base(new Parameters()) { }
 }
 
 public class StateMachine<TStateId>
