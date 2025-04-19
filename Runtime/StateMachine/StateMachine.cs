@@ -117,6 +117,7 @@ public class StateMachine<TStateId>
                 }
 
                 CurrentState = nextState;
+                CurrentState.StateMachine = this;
                 CurrentState.OnEnter();
                 OnEnterState?.Invoke(CurrentState);
             }
