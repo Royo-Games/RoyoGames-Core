@@ -84,37 +84,48 @@ public class StateMachine<TStateId>
 
         if (stateId == null)
             throw new ArgumentNullException(nameof(stateId));
+
         if (!_states.ContainsKey(stateId))
             throw new InvalidOperationException($"Unregistered state: {stateId}");
 
-        _pendingStates.Enqueue(stateId);
         if (_isTransitioning)
-            return;
-
-        _isTransitioning = true;
-        try
         {
-            while (_pendingStates.Count > 0)
-            {
-                var nextId = _pendingStates.Dequeue();
-                var nextState = _states[nextId];
+            _pendingStates.Enqueue(stateId);
+            return;
+        }
+        else
+        {
+            _isTransitioning = true;
 
+            try
+            {
                 if (CurrentState != null)
                 {
                     CurrentState.OnExit();
                     OnExitState?.Invoke(CurrentState);
                 }
 
-                CurrentState = nextState;
+                CurrentState = _states[stateId];
                 CurrentState.StateMachine = this;
                 CurrentState.OnEnter();
                 OnEnterState?.Invoke(CurrentState);
             }
+            finally
+            {
+                _isTransitioning = false;
+
+                while (_pendingStates.Count > 0)
+                {
+                    var pendingId = _pendingStates.Dequeue();
+                    ChangeState(pendingId);
+                }
+            }
         }
-        finally
-        {
-            _isTransitioning = false;
-        }
+    }
+
+    public bool HasState(TStateId stateId)
+    {
+        return _states.ContainsKey(stateId);
     }
 
     private void HandleTransitions()
