@@ -3,7 +3,7 @@ public abstract class State : State<string> { }
 
 public abstract class State<TStateId> : IState<TStateId>
 {
-    public abstract TStateId StateID { get; }
+    public abstract TStateId StateID { get; set; }
     public StateMachine<TStateId> StateMachine { get; set; }
 
     public virtual void OnEnter()

@@ -4,7 +4,7 @@ public abstract class StateBehaviour : StateBehaviour<string> { }
 
 public abstract class StateBehaviour<TStateId> : MonoBehaviour, IState<TStateId>
 {
-    public abstract TStateId StateID { get; }
+    public abstract TStateId StateID { get; set; }
     public StateMachine<TStateId> StateMachine { get; set; }
 
     public virtual void OnEnter()
