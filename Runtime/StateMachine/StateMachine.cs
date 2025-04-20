@@ -13,13 +13,15 @@ public class StateMachine<TStateId>
     public IState<TStateId> CurrentState { get; private set; }
     public Action<IState<TStateId>> OnEnterState { get; set; }
     public Action<IState<TStateId>> OnExitState { get; set; }
+    public bool IsStarted { get; private set; }
 
     private readonly Dictionary<TStateId, IState<TStateId>> _states = new();
     private readonly Dictionary<TStateId, List<LocalTransition<TStateId>>> _transitions = new();
     private readonly List<GlobalTransition<TStateId>> _globalTransitions = new();
     private readonly Queue<TStateId> _pendingStates = new();
-    private bool _isTransitioning;
     public Parameters Parameters { get; private set; }
+
+    private bool _isTransitioning;
 
     public StateMachine()
     {
@@ -33,12 +35,87 @@ public class StateMachine<TStateId>
 
     public void Update()
     {
+        if (!IsStarted) return;
+
         HandleTransitions();
         CurrentState?.OnUpdate();
     }
 
-    public void LateUpdate() => CurrentState?.OnLateUpdate();
-    public void FixedUpdate() => CurrentState?.OnFixedUpdate();
+    public void LateUpdate()
+    {
+        if (!IsStarted) return;
+        CurrentState?.OnLateUpdate();
+    }
+    public void FixedUpdate()
+    {
+        if (!IsStarted) return;
+        CurrentState?.OnFixedUpdate();
+    }
+
+    public void Start()
+    {
+        IsStarted = true;
+    }
+
+    public void Start(TStateId initialStateId)
+    {
+        IsStarted = true;
+        ChangeState(initialStateId);
+    }
+
+    public void Stop()
+    {
+        if (CurrentState != null)
+        {
+            CurrentState.OnExit();
+            OnExitState?.Invoke(CurrentState);
+            CurrentState = null;
+        }
+
+        _pendingStates.Clear();
+        _isTransitioning = false;
+        IsStarted = false;
+    }
+
+    public void ChangeState(TStateId stateId)
+    {
+        if (!IsStarted)
+            throw new InvalidOperationException("StateMachine has not been started.");
+
+        if (stateId == null)
+            throw new ArgumentNullException(nameof(stateId));
+        if (!_states.ContainsKey(stateId))
+            throw new InvalidOperationException($"Unregistered state: {stateId}");
+
+        _pendingStates.Enqueue(stateId);
+        if (_isTransitioning)
+            return;
+
+        _isTransitioning = true;
+        try
+        {
+            while (_pendingStates.Count > 0)
+            {
+                var nextId = _pendingStates.Dequeue();
+                var nextState = _states[nextId];
+
+                if (CurrentState != null)
+                {
+                    CurrentState.OnExit();
+                    OnExitState?.Invoke(CurrentState);
+                }
+
+                CurrentState = nextState;
+                CurrentState.StateMachine = this;
+                CurrentState.OnEnter();
+                OnEnterState?.Invoke(CurrentState);
+            }
+        }
+        finally
+        {
+            _isTransitioning = false;
+        }
+    }
 
     private void HandleTransitions()
     {
@@ -82,48 +159,6 @@ public class StateMachine<TStateId>
             && !localTransition.ToState.Equals(CurrentState.StateID))
         {
             ChangeState(localTransition.ToState);
-        }
-    }
-
-    public void SetInitState(TStateId initialStateId)
-    {
-        ChangeState(initialStateId);
-    }
-
-    public void ChangeState(TStateId stateId)
-    {
-        if (stateId == null)
-            throw new ArgumentNullException(nameof(stateId));
-        if (!_states.ContainsKey(stateId))
-            throw new InvalidOperationException($"Unregistered state: {stateId}");
-
-        _pendingStates.Enqueue(stateId);
-        if (_isTransitioning)
-            return;
-
-        _isTransitioning = true;
-        try
-        {
-            while (_pendingStates.Count > 0)
-            {
-                var nextId = _pendingStates.Dequeue();
-                var nextState = _states[nextId];
-
-                if (CurrentState != null)
-                {
-                    CurrentState.OnExit();
-                    OnExitState?.Invoke(CurrentState);
-                }
-
-                CurrentState = nextState;
-                CurrentState.StateMachine = this;
-                CurrentState.OnEnter();
-                OnEnterState?.Invoke(CurrentState);
-            }
-        }
-        finally
-        {
-            _isTransitioning = false;
         }
     }
 
