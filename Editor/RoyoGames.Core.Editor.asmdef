@@ -1,7 +1,9 @@
 {
     "name": "RoyoGames.Core.Editor",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:ca7b720e06c80f3448b3048fed9437c6"
+    ],
     "includePlatforms": [
         "Editor"
     ],

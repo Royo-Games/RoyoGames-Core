@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public class Parameters : Parameters<string> { }
 
-public class Parameters<TKey> where TKey : notnull
-{
-    private readonly Dictionary<TKey, object> _data = new();
-    private readonly Dictionary<TKey, List<Delegate>> _listeners = new();
+[Serializable]
+public class Parameters 
+{ 
+    private Dictionary<string, object> _data = new();
+    private readonly Dictionary<string, List<Delegate>> _listeners = new();
     private readonly Queue<PendingOp> _pendingOps = new();
     private bool _isNotifying = false;
 
     private readonly struct PendingOp
     {
-        public readonly TKey Key;
+        public readonly string Key;
         public readonly Delegate Callback;
         public readonly bool IsAdd;
 
-        public PendingOp(TKey key, Delegate callback, bool isAdd)
+        public PendingOp(string key, Delegate callback, bool isAdd)
         {
             Key = key;
             Callback = callback;
@@ -24,7 +24,7 @@ public class Parameters<TKey> where TKey : notnull
         }
     }
 
-    public void Add<T>(TKey key, T defaultValue)
+    public void Add<T>(string key, T defaultValue)
     {
         if (_data.ContainsKey(key))
             throw new ArgumentException($"Parameter with key '{key}' already exists.", nameof(key));
@@ -33,13 +33,13 @@ public class Parameters<TKey> where TKey : notnull
         InvokeListeners(key, defaultValue);
     }
 
-    public bool Remove(TKey key)
+    public bool Remove(string key)
     {
         _listeners.Remove(key);
         return _data.Remove(key);
     }
 
-    public void Set<T>(TKey key, T value)
+    public void Set<T>(string key, T value)
     {
         if (!_data.ContainsKey(key))
             throw new KeyNotFoundException($"Parameter key not found: {key}");
@@ -48,16 +48,16 @@ public class Parameters<TKey> where TKey : notnull
         InvokeListeners(key, value);
     }
 
-    public T Get<T>(TKey key)
+    public T Get<T>(string key)
     {
         if (_data.TryGetValue(key, out var obj) && obj is T t)
             return t;
         throw new KeyNotFoundException($"Parameter key not found or wrong type: {key}");
     }
 
-    public bool Has(TKey key) => _data.ContainsKey(key);
+    public bool Has(string key) => _data.ContainsKey(key);
 
-    public void AddListener<T>(TKey key, Action<T> callback)
+    public void AddListener<T>(string key, Action<T> callback)
     {
         if (!_data.ContainsKey(key))
             throw new KeyNotFoundException($"Parameter key not found: {key}");
@@ -74,7 +74,7 @@ public class Parameters<TKey> where TKey : notnull
         }
     }
 
-    public bool RemoveListener<T>(TKey key, Action<T> callback)
+    public bool RemoveListener<T>(string key, Action<T> callback)
     {
         if (!_data.ContainsKey(key))
             return false;
@@ -94,7 +94,7 @@ public class Parameters<TKey> where TKey : notnull
         return false;
     }
 
-    private void InvokeListeners<T>(TKey key, T newValue)
+    private void InvokeListeners<T>(string key, T newValue)
     {
         if (!_listeners.TryGetValue(key, out var list))
             return;

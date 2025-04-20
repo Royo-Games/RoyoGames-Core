@@ -1,11 +1,11 @@
 ﻿using System;
 
-public class RangeCondition : ICondition
+public class ConditionRange : ICondition
 {
     private readonly string _key;
     private readonly float _min, _max;
 
-    public RangeCondition(string key, float min, float max)
+    public ConditionRange(string key, float min, float max)
     {
         if (min > max)
             throw new ArgumentException($"min ({min}) cannot be greater than max ({max}).");
