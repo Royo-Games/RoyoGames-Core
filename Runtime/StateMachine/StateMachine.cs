@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+[System.Serializable]
 public class StateMachine : StateMachine<string>
 {
     public StateMachine(Parameters parameters) : base(parameters) { }

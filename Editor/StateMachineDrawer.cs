@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-[CustomPropertyDrawer(typeof(StateMachine<>))]
+[CustomPropertyDrawer(typeof(StateMachine<>), useForChildren: true)]
 public class StateMachineDrawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -57,9 +56,6 @@ public class StateMachineDrawer : PropertyDrawer
             EditorGUI.LabelField(lineRect, "Current State", currentStateID);
             y += lh + EditorGUIUtility.standardVerticalSpacing;
             lineRect.y = y;
-            EditorGUI.LabelField(lineRect, "Total States", stateCount.ToString());
-            y += lh + EditorGUIUtility.standardVerticalSpacing;
-            lineRect.y = y;
             EditorGUI.LabelField(lineRect, "Local Transitions", localCount.ToString());
             y += lh + EditorGUIUtility.standardVerticalSpacing;
             lineRect.y = y;
@@ -67,7 +63,7 @@ public class StateMachineDrawer : PropertyDrawer
             y += lh + EditorGUIUtility.standardVerticalSpacing;
 
             lineRect.y = y;
-            EditorGUI.LabelField(lineRect, "States", "");
+            EditorGUI.LabelField(lineRect, $"States ({stateCount})", "");
             y += lh + EditorGUIUtility.standardVerticalSpacing;
 
             if (statesDict != null)
@@ -99,7 +95,7 @@ public class StateMachineDrawer : PropertyDrawer
             if (statesDict != null)
                 idCount = statesDict.Count;
 
-            int lines = 5 + idCount;
+            int lines = 4 + idCount;
             height += lines * (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
         }
 
