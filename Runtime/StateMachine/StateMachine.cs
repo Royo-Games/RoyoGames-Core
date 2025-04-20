@@ -123,7 +123,7 @@ public class StateMachine<TStateId>
         }
     }
 
-    public bool HasState(TStateId stateId)
+    public bool ContainsState(TStateId stateId)
     {
         return _states.ContainsKey(stateId);
     }
