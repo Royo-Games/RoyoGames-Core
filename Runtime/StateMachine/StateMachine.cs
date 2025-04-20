@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 [System.Serializable]
-public class StateMachine : StateMachine<string>
-{
-    public StateMachine(Parameters parameters) : base(parameters) { }
-}
-
-[System.Serializable]
 public class StateMachine<TStateId>
 {
     public IState<TStateId> CurrentState { get; private set; }
