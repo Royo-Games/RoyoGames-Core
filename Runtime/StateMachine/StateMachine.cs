@@ -120,7 +120,7 @@ public class StateMachine<TStateId>
 
     public IState<TStateId> GetState(TStateId stateId)
     {
-        if (!_states.TryGetValue(stateId, out var state))
+        if (_states.TryGetValue(stateId, out var state))
             return state;
         else
             return null;
