@@ -118,6 +118,14 @@ public class StateMachine<TStateId>
         return _states.ContainsKey(stateId);
     }
 
+    public IState<TStateId> GetState(TStateId stateId)
+    {
+        if (!_states.TryGetValue(stateId, out var state))
+            return state;
+        else
+            return null;
+    }
+
     public void HandleTransitions()
     {
         if (_isTransitioning)
