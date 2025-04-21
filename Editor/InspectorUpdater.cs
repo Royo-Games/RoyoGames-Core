@@ -1,10 +1,11 @@
-using System.Linq;
 using UnityEditor;
-using UnityEngine;
 
 [InitializeOnLoad]
 static class InspectorUpdater
 {
+    private static double _lastRepaintTime;
+    private const double RepaintInterval =1;
+
     static InspectorUpdater()
     {
         EditorApplication.update += UpdateInspectors;
@@ -12,13 +13,14 @@ static class InspectorUpdater
 
     private static void UpdateInspectors()
     {
-        if (!Application.isPlaying) return;
+        if (!EditorApplication.isPlaying) return;
 
-        var inspectors = Resources
-            .FindObjectsOfTypeAll<EditorWindow>()
-            .Where(w => w.GetType().Name == "InspectorWindow");
+        if (EditorApplication.timeSinceStartup - _lastRepaintTime < RepaintInterval)
+            return;
 
-        foreach (var insp in inspectors)
+        _lastRepaintTime = EditorApplication.timeSinceStartup;
+
+        foreach (var insp in InspectorWindowCache.GetInspectorWindows())
             insp.Repaint();
     }
 }
