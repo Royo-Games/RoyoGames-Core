@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-[System.Serializable]
+[Serializable]
 public class StateMachine<TStateId>
 {
     public IState<TStateId> CurrentState { get; private set; }
@@ -11,7 +11,7 @@ public class StateMachine<TStateId>
     public bool IsStarted { get; private set; }
 
     private readonly Dictionary<TStateId, IState<TStateId>> _states = new();
-    private readonly Dictionary<TStateId, List<TransitionLocal<TStateId>>> _transitions = new();
+    private readonly Dictionary<TStateId, List<TransitionLocal<TStateId>>> _localTransitions = new();
     private readonly List<TransitionGlobal<TStateId>> _globalTransitions = new();
     private readonly Queue<TStateId> _pendingStates = new();
     public Parameters Parameters { get; private set; }
@@ -143,7 +143,7 @@ public class StateMachine<TStateId>
         if (CurrentState == null)
             return;
 
-        if (!_transitions.TryGetValue(CurrentState.StateID, out var list))
+        if (!_localTransitions.TryGetValue(CurrentState.StateID, out var list))
             return;
 
         TransitionLocal<TStateId> localTransition = null;
@@ -176,14 +176,14 @@ public class StateMachine<TStateId>
         if (!_states.Remove(state.StateID))
             return;
 
-        _transitions.Remove(state.StateID);
-        var fromStates = _transitions.Keys.ToList();
+        _localTransitions.Remove(state.StateID);
+        var fromStates = _localTransitions.Keys.ToList();
         foreach (var from in fromStates)
         {
-            var list = _transitions[from];
+            var list = _localTransitions[from];
             list.RemoveAll(t => t.ToState.Equals(state.StateID));
             if (list.Count == 0)
-                _transitions.Remove(from);
+                _localTransitions.Remove(from);
         }
 
         _globalTransitions.RemoveAll(t => t.ToState.Equals(state.StateID));
@@ -213,10 +213,10 @@ public class StateMachine<TStateId>
                     throw new InvalidOperationException($"Cannot add transition, unregistered state(s): {string.Join(", ", missing)}");
                 }
 
-                if (!_transitions.TryGetValue(localTransition.FromState, out var list))
+                if (!_localTransitions.TryGetValue(localTransition.FromState, out var list))
                 {
                     list = new List<TransitionLocal<TStateId>>();
-                    _transitions[localTransition.FromState] = list;
+                    _localTransitions[localTransition.FromState] = list;
                 }
 
                 if (list.Any(t => t.ToState.Equals(localTransition.ToState) && t.Condition == transition.Condition))
@@ -239,17 +239,37 @@ public class StateMachine<TStateId>
         switch (transition)
         {
             case TransitionLocal<TStateId> localTransition:
-                if (_transitions.TryGetValue(localTransition.FromState, out var list))
+                if (_localTransitions.TryGetValue(localTransition.FromState, out var list))
                 {
                     list.Remove(localTransition);
                     if (list.Count == 0)
-                        _transitions.Remove(localTransition.FromState);
+                        _localTransitions.Remove(localTransition.FromState);
                 }
                 break;
 
             case TransitionGlobal<TStateId> globalTransition:
                 _globalTransitions.Remove(globalTransition);
                 break;
+        }
+    }
+
+    public void Reset(bool resetEvents = true)
+    {
+        Stop();
+
+        _states.Clear();
+        _globalTransitions.Clear();
+        _localTransitions.Clear();
+        _pendingStates.Clear();
+
+        CurrentState = null;
+        IsStarted = false;
+        _isTransitioning = false;
+
+        if (resetEvents)
+        {
+            OnEnterState = null;
+            OnExitState = null;
         }
     }
 }

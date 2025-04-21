@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 
 [Serializable]
-public class Parameters 
-{ 
+public class Parameters
+{
     private Dictionary<string, object> _data = new();
     private readonly Dictionary<string, List<Delegate>> _listeners = new();
     private readonly Queue<PendingOp> _pendingOps = new();
     private bool _isNotifying = false;
-
+  
     private readonly struct PendingOp
     {
         public readonly string Key;
@@ -136,4 +136,23 @@ public class Parameters
             }
         }
     }
+
+    public void ClearData()
+    {
+        _data.Clear();
+    }
+
+    public void ClearListeners()
+    {
+        _listeners.Clear();
+        _pendingOps.Clear();
+        _isNotifying = false;
+    }
+
+    public void ClearAll()
+    {
+        ClearData();
+        ClearListeners();
+    }
+
 }
