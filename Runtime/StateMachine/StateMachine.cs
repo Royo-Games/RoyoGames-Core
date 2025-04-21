@@ -11,8 +11,8 @@ public class StateMachine<TStateId>
     public bool IsStarted { get; private set; }
 
     private readonly Dictionary<TStateId, IState<TStateId>> _states = new();
-    private readonly Dictionary<TStateId, List<TransitionLocal<TStateId>>> _localTransitions = new();
-    private readonly List<TransitionGlobal<TStateId>> _globalTransitions = new();
+    private readonly Dictionary<TStateId, List<LocalTransition<TStateId>>> _localTransitions = new();
+    private readonly List<GlobalTransition<TStateId>> _globalTransitions = new();
     private readonly Queue<TStateId> _pendingStates = new();
     public Parameters Parameters { get; private set; }
 
@@ -118,12 +118,12 @@ public class StateMachine<TStateId>
         return _states.ContainsKey(stateId);
     }
 
-    private void HandleTransitions()
+    public void HandleTransitions()
     {
         if (_isTransitioning)
             return;
 
-        TransitionGlobal<TStateId> globalTransition = null;
+        GlobalTransition<TStateId> globalTransition = null;
         foreach (var t in _globalTransitions)
         {
             if (t.Condition.Evaluate(Parameters))
@@ -146,7 +146,7 @@ public class StateMachine<TStateId>
         if (!_localTransitions.TryGetValue(CurrentState.StateID, out var list))
             return;
 
-        TransitionLocal<TStateId> localTransition = null;
+        LocalTransition<TStateId> localTransition = null;
         foreach (var t in list)
         {
             if (t.Condition.Evaluate(Parameters))
@@ -204,7 +204,7 @@ public class StateMachine<TStateId>
     {
         switch (transition)
         {
-            case TransitionLocal<TStateId> localTransition:
+            case LocalTransition<TStateId> localTransition:
                 if (!_states.ContainsKey(localTransition.FromState) || !_states.ContainsKey(localTransition.ToState))
                 {
                     var missing = new List<string>();
@@ -215,7 +215,7 @@ public class StateMachine<TStateId>
 
                 if (!_localTransitions.TryGetValue(localTransition.FromState, out var list))
                 {
-                    list = new List<TransitionLocal<TStateId>>();
+                    list = new List<LocalTransition<TStateId>>();
                     _localTransitions[localTransition.FromState] = list;
                 }
 
@@ -225,7 +225,7 @@ public class StateMachine<TStateId>
                 list.Add(localTransition);
                 break;
 
-            case TransitionGlobal<TStateId> globalTransition:
+            case GlobalTransition<TStateId> globalTransition:
                 if (_globalTransitions.Any(t => t.ToState.Equals(globalTransition.ToState) && t.Condition == globalTransition.Condition))
                     throw new InvalidOperationException($"Duplicate global transition to '{globalTransition.ToState}'");
 
@@ -238,7 +238,7 @@ public class StateMachine<TStateId>
     {
         switch (transition)
         {
-            case TransitionLocal<TStateId> localTransition:
+            case LocalTransition<TStateId> localTransition:
                 if (_localTransitions.TryGetValue(localTransition.FromState, out var list))
                 {
                     list.Remove(localTransition);
@@ -247,7 +247,7 @@ public class StateMachine<TStateId>
                 }
                 break;
 
-            case TransitionGlobal<TStateId> globalTransition:
+            case GlobalTransition<TStateId> globalTransition:
                 _globalTransitions.Remove(globalTransition);
                 break;
         }

@@ -1,10 +1,10 @@
-﻿public class ConditionNumeric : ICondition
+﻿public class NumericCondition : ICondition
 {
     private readonly string _key;
     private readonly float _threshold;
     private readonly ComparisonType _comparison;
 
-    public ConditionNumeric(string key, float threshold, ComparisonType comparison)
+    public NumericCondition(string key, float threshold, ComparisonType comparison)
     {
         _key = key;
         _threshold = threshold;

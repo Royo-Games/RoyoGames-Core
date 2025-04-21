@@ -1,11 +1,11 @@
 ﻿using System;
 
-public class ConditionEquals<T> : ICondition where T : IEquatable<T>
+public class EqualsCondition<T> : ICondition where T : IEquatable<T>
 {
     private readonly string _key;
     private readonly T _targetValue;
 
-    public ConditionEquals(string key, T targetValue)
+    public EqualsCondition(string key, T targetValue)
     {
         _key = key;
         _targetValue = targetValue;
