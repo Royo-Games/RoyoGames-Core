@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public abstract class StateBehaviour<TStateId> : MonoBehaviour, IState<TStateId>
+public abstract class StateBehaviour<TStateId, TBlackBoard> : MonoBehaviour, IState<TStateId, TBlackBoard> where TBlackBoard : class
 {
     public virtual TStateId StateID { get; set; }
-    public StateMachine<TStateId> StateMachine { get; set; }
+    public StateMachine<TStateId, TBlackBoard> StateMachine { get; set; }
 
     public virtual void OnEnter()
     {

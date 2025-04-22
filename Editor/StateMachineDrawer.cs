@@ -4,7 +4,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-[CustomPropertyDrawer(typeof(StateMachine<>), useForChildren: true)]
+[CustomPropertyDrawer(typeof(StateMachine<,>), useForChildren: true)]
 public class StateMachineDrawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

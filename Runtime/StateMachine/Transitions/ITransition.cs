@@ -1,7 +1,8 @@
 ﻿
-public interface ITransition : ITransition<string> { }
-public interface ITransition<TStateId>
+using System;
+
+public interface ITransition<TStateId, TBlackBoard>
 {
-    public ICondition Condition { get; set; }
+    public Func<TBlackBoard, bool> Condition { get; set; }
     public TStateId ToState { get; set; }
 }
