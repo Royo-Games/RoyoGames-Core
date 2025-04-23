@@ -1,7 +1,7 @@
 
 using System;
 
-public class LocalTransition<TStateId, TManager> : ITransition<TStateId, TManager> where TManager : class
+public class LocalTransition<TStateId, TManager> : ITransition<TStateId, TManager>
 {
     public TStateId FromState { get; set; }
     public TStateId ToState { get; set; }

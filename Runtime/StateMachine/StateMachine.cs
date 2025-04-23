@@ -2,26 +2,42 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+[Serializable]
+public class StateMachine : StateMachine<string, string>
+{
+    public StateMachine() : base("")
+    {
+    }
+}
+
 
 [Serializable]
-public class StateMachine<TStateId, TManager> where TManager : class
+public class StateMachine<TStateId> : StateMachine<TStateId, string>
 {
-    public IState<TStateId, TManager> CurrentState { get; private set; }
-    public Action<IState<TStateId, TManager>> OnEnterState { get; set; }
-    public Action<IState<TStateId, TManager>> OnExitState { get; set; }
+    public StateMachine() : base("")
+    {
+    }
+}
+
+[Serializable]
+public class StateMachine<TStateId, TBlackBoard>
+{
+    public IState<TStateId> CurrentState { get; private set; }
+    public Action<IState<TStateId>> OnEnterState { get; set; }
+    public Action<IState<TStateId>> OnExitState { get; set; }
     public bool IsStarted { get; private set; }
 
-    private readonly Dictionary<TStateId, IState<TStateId, TManager>> _states = new();
-    private readonly Dictionary<TStateId, List<LocalTransition<TStateId, TManager>>> _localTransitions = new();
-    private readonly List<GlobalTransition<TStateId, TManager>> _globalTransitions = new();
+    private readonly Dictionary<TStateId, IState<TStateId>> _states = new();
+    private readonly Dictionary<TStateId, List<LocalTransition<TStateId, TBlackBoard>>> _localTransitions = new();
+    private readonly List<GlobalTransition<TStateId, TBlackBoard>> _globalTransitions = new();
     private readonly Queue<TStateId> _pendingStates = new();
-    public TManager Manager { get; private set; }
+    public TBlackBoard BlackBoard { get; private set; }
 
     private bool _isTransitioning;
 
-    public StateMachine(TManager manager)
+    public StateMachine(TBlackBoard blackBoard)
     {
-        Manager = manager;
+        BlackBoard = blackBoard;
     }
 
     public void Update()
@@ -97,7 +113,6 @@ public class StateMachine<TStateId, TManager> where TManager : class
                 }
 
                 CurrentState = _states[stateId];
-                CurrentState.StateMachine = this;
                 CurrentState.OnEnter();
                 OnEnterState?.Invoke(CurrentState);
             }
@@ -119,7 +134,7 @@ public class StateMachine<TStateId, TManager> where TManager : class
         return _states.ContainsKey(stateId);
     }
 
-    public IState<TStateId, TManager> GetState(TStateId stateId)
+    public IState<TStateId> GetState(TStateId stateId)
     {
         if (_states.TryGetValue(stateId, out var state))
             return state;
@@ -132,10 +147,10 @@ public class StateMachine<TStateId, TManager> where TManager : class
         if (_isTransitioning)
             return;
 
-        GlobalTransition<TStateId, TManager> globalTransition = null;
+        GlobalTransition<TStateId, TBlackBoard> globalTransition = null;
         foreach (var t in _globalTransitions)
         {
-            if (t.Condition(Manager))
+            if (t.Condition(BlackBoard))
             {
                 globalTransition = t;
                 break;
@@ -155,10 +170,10 @@ public class StateMachine<TStateId, TManager> where TManager : class
         if (!_localTransitions.TryGetValue(CurrentState.StateID, out var list))
             return;
 
-        LocalTransition<TStateId, TManager> localTransition = null;
+        LocalTransition<TStateId, TBlackBoard> localTransition = null;
         foreach (var t in list)
         {
-            if (t.Condition(Manager))
+            if (t.Condition(BlackBoard))
             {
                 localTransition = t;
                 break;
@@ -172,7 +187,7 @@ public class StateMachine<TStateId, TManager> where TManager : class
         }
     }
 
-    public void AddState(IState<TStateId, TManager> state)
+    public void AddState(IState<TStateId> state)
     {
         if (_states.ContainsKey(state.StateID))
             throw new InvalidOperationException($"State already exists: {state.StateID}");
@@ -180,7 +195,7 @@ public class StateMachine<TStateId, TManager> where TManager : class
         _states[state.StateID] = state;
     }
 
-    public void RemoveState(IState<TStateId, TManager> state)
+    public void RemoveState(IState<TStateId> state)
     {
         if (!_states.Remove(state.StateID))
             return;
@@ -209,11 +224,11 @@ public class StateMachine<TStateId, TManager> where TManager : class
         }
     }
 
-    public void AddTransition(ITransition<TStateId, TManager> transition)
+    public void AddTransition(ITransition<TStateId, TBlackBoard> transition)
     {
         switch (transition)
         {
-            case LocalTransition<TStateId, TManager> localTransition:
+            case LocalTransition<TStateId, TBlackBoard> localTransition:
                 if (!_states.ContainsKey(localTransition.FromState) || !_states.ContainsKey(localTransition.ToState))
                 {
                     var missing = new List<string>();
@@ -224,7 +239,7 @@ public class StateMachine<TStateId, TManager> where TManager : class
 
                 if (!_localTransitions.TryGetValue(localTransition.FromState, out var list))
                 {
-                    list = new List<LocalTransition<TStateId, TManager>>();
+                    list = new List<LocalTransition<TStateId, TBlackBoard>>();
                     _localTransitions[localTransition.FromState] = list;
                 }
 
@@ -234,7 +249,7 @@ public class StateMachine<TStateId, TManager> where TManager : class
                 list.Add(localTransition);
                 break;
 
-            case GlobalTransition<TStateId, TManager> globalTransition:
+            case GlobalTransition<TStateId, TBlackBoard> globalTransition:
                 if (_globalTransitions.Any(t => t.ToState.Equals(globalTransition.ToState) && t.Condition == globalTransition.Condition))
                     throw new InvalidOperationException($"Duplicate global transition to '{globalTransition.ToState}'");
 
@@ -243,25 +258,25 @@ public class StateMachine<TStateId, TManager> where TManager : class
         }
     }
 
-    public LocalTransition<TStateId, TManager> AddLocalTransition(TStateId from, TStateId to, Func<TManager, bool> condition)
+    public LocalTransition<TStateId, TBlackBoard> AddLocalTransition(TStateId from, TStateId to, Func<TBlackBoard, bool> condition)
     {
-        LocalTransition<TStateId, TManager> transition = new(from, to, condition);
+        LocalTransition<TStateId, TBlackBoard> transition = new(from, to, condition);
         AddTransition(transition);
         return transition;
     }
 
-    public GlobalTransition<TStateId, TManager> AddGlobalTransition(TStateId to, Func<TManager, bool> condition)
+    public GlobalTransition<TStateId, TBlackBoard> AddGlobalTransition(TStateId to, Func<TBlackBoard, bool> condition)
     {
-        GlobalTransition<TStateId, TManager> transition = new(to, condition);
+        GlobalTransition<TStateId, TBlackBoard> transition = new(to, condition);
         AddTransition(transition);
         return transition;
     }
 
-    public void RemoveTransition(ITransition<TStateId, TManager> transition)
+    public void RemoveTransition(ITransition<TStateId, TBlackBoard> transition)
     {
         switch (transition)
         {
-            case LocalTransition<TStateId, TManager> localTransition:
+            case LocalTransition<TStateId, TBlackBoard> localTransition:
                 if (_localTransitions.TryGetValue(localTransition.FromState, out var list))
                 {
                     list.Remove(localTransition);
@@ -270,7 +285,7 @@ public class StateMachine<TStateId, TManager> where TManager : class
                 }
                 break;
 
-            case GlobalTransition<TStateId, TManager> globalTransition:
+            case GlobalTransition<TStateId, TBlackBoard> globalTransition:
                 _globalTransitions.Remove(globalTransition);
                 break;
         }

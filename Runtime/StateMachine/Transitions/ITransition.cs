@@ -1,8 +1,8 @@
 ﻿
 using System;
 
-public interface ITransition<TStateId, TManager> where TManager : class
+public interface ITransition<TStateId, TBlackBoard>
 {
-    public Func<TManager, bool> Condition { get; set; }
+    public Func<TBlackBoard, bool> Condition { get; set; }
     public TStateId ToState { get; set; }
 }
