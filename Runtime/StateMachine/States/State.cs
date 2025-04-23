@@ -1,10 +1,8 @@
 ﻿
-public abstract class State : State<string> { }
-public abstract class State<TStateId> : State<TStateId, string> { }
-public abstract class State<TStateId, TBlackBoard> : IState<TStateId, TBlackBoard>
+public abstract class State<TStateId, TManager> : IState<TStateId, TManager> where TManager : class
 {
     public virtual TStateId StateID { get; set; }
-    public StateMachine<TStateId, TBlackBoard> StateMachine { get; set; }
+    public StateMachine<TStateId, TManager> StateMachine { get; set; }
 
     public virtual void OnEnter()
     {

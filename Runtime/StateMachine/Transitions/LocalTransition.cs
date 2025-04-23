@@ -1,21 +1,13 @@
 
 using System;
-public class LocalTransition : LocalTransition<string, string>
-{
-    public LocalTransition(string fromState, string toState, Func<string, bool> condition) : base(fromState, toState, condition) { }
-}
-public class LocalTransition<TStateId> : LocalTransition<TStateId, string>
-{
-    public LocalTransition(TStateId fromState, TStateId toState, Func<string, bool> condition) : base(fromState, toState, condition){}
-}
-public class LocalTransition<TStateId, TBlackBoard> : ITransition<TStateId, TBlackBoard>
+
+public class LocalTransition<TStateId, TManager> : ITransition<TStateId, TManager> where TManager : class
 {
     public TStateId FromState { get; set; }
     public TStateId ToState { get; set; }
-    public Func<TBlackBoard, bool> Condition { get; set; }
+    public Func<TManager, bool> Condition { get; set; }
 
-
-    public LocalTransition(TStateId fromState, TStateId toState, Func<TBlackBoard, bool> condition)
+    public LocalTransition(TStateId fromState, TStateId toState, Func<TManager, bool> condition)
     {
         FromState = fromState;
         ToState = toState;
