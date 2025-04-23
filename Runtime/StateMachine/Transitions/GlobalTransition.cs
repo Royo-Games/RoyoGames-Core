@@ -1,12 +1,12 @@
 ﻿using System;
 
-public class GlobalTransition : GlobalTransition<string, Empty>
+public class GlobalTransition : GlobalTransition<string, string>
 {
-    public GlobalTransition(string toState, Func<Empty, bool> condition) : base(toState, condition) { }
+    public GlobalTransition(string toState, Func<string, bool> condition) : base(toState, condition) { }
 }
-public class GlobalTransition<TStateId> : GlobalTransition<TStateId, Empty>
+public class GlobalTransition<TStateId> : GlobalTransition<TStateId, string>
 {
-    public GlobalTransition(TStateId toState, Func<Empty, bool> condition) : base(toState, condition){}
+    public GlobalTransition(TStateId toState, Func<string, bool> condition) : base(toState, condition){}
 }
 public class GlobalTransition<TStateId, TBlackBoard> : ITransition<TStateId, TBlackBoard>
 {

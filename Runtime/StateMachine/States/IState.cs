@@ -1,7 +1,7 @@
 
 public interface IState : IState<string> { }
-public interface IState<TStateId> : IState<TStateId, Empty> { }
-public interface IState<TStateId, TBlackBoard> where TBlackBoard : class
+public interface IState<TStateId> : IState<TStateId, string> { }
+public interface IState<TStateId, TBlackBoard>
 {
     TStateId StateID { get; set; }
     StateMachine<TStateId, TBlackBoard> StateMachine { get; set; }

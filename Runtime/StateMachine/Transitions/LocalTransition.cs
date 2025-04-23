@@ -1,12 +1,12 @@
 
 using System;
-public class LocalTransition : LocalTransition<string, Empty>
+public class LocalTransition : LocalTransition<string, string>
 {
-    public LocalTransition(string fromState, string toState, Func<Empty, bool> condition) : base(fromState, toState, condition) { }
+    public LocalTransition(string fromState, string toState, Func<string, bool> condition) : base(fromState, toState, condition) { }
 }
-public class LocalTransition<TStateId> : LocalTransition<TStateId, Empty>
+public class LocalTransition<TStateId> : LocalTransition<TStateId, string>
 {
-    public LocalTransition(TStateId fromState, TStateId toState, Func<Empty, bool> condition) : base(fromState, toState, condition){}
+    public LocalTransition(TStateId fromState, TStateId toState, Func<string, bool> condition) : base(fromState, toState, condition){}
 }
 public class LocalTransition<TStateId, TBlackBoard> : ITransition<TStateId, TBlackBoard>
 {

@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class StateMachine : StateMachine<string, Empty>
+public class StateMachine : StateMachine<string, string>
 {
-    public StateMachine() : base(new Empty()) { }
+    public StateMachine() : base(null){}
 }
 
-public class StateMachine<TStateId> : StateMachine<TStateId, Empty>
+public class StateMachine<TStateId> : StateMachine<TStateId, string>
 {
-    public StateMachine() : base(new Empty()) { }
+    public StateMachine() : base(null){}
 }
 
 [Serializable]
-public class StateMachine<TStateId, TBlackBoard> where TBlackBoard : class
+public class StateMachine<TStateId, TBlackBoard>
 {
     public IState<TStateId, TBlackBoard> CurrentState { get; private set; }
     public Action<IState<TStateId, TBlackBoard>> OnEnterState { get; set; }
