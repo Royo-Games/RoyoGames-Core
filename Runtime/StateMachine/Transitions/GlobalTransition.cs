@@ -1,5 +1,13 @@
 ﻿using System;
 
+public class GlobalTransition : GlobalTransition<string, Empty>
+{
+    public GlobalTransition(string toState, Func<Empty, bool> condition) : base(toState, condition) { }
+}
+public class GlobalTransition<TStateId> : GlobalTransition<TStateId, Empty>
+{
+    public GlobalTransition(TStateId toState, Func<Empty, bool> condition) : base(toState, condition){}
+}
 public class GlobalTransition<TStateId, TBlackBoard> : ITransition<TStateId, TBlackBoard>
 {
     public TStateId FromState { get; set; }

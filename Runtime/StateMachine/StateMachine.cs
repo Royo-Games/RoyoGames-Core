@@ -2,6 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+public class StateMachine : StateMachine<string, Empty>
+{
+    public StateMachine() : base(new Empty()) { }
+}
+
+public class StateMachine<TStateId> : StateMachine<TStateId, Empty>
+{
+    public StateMachine() : base(new Empty()) { }
+}
+
 [Serializable]
 public class StateMachine<TStateId, TBlackBoard> where TBlackBoard : class
 {
