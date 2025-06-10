@@ -1,8 +1,4 @@
 ﻿
-public abstract class State : State<string>
-{
-}
-
 public abstract class State<TStateId> : IState<TStateId>
 {
     public virtual TStateId StateID { get; set; }
