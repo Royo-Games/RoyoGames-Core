@@ -9,16 +9,17 @@ namespace RoyoGames.Document
 {
     public class EntityTable
     {
-        private ReaderWriterLockSlim Lck;
-        internal Dictionary<string, Column> columns;
-        private List<Row> rows;
+        private ReaderWriterLockSlim _lck;
+        private Dictionary<string, Column> _columns;
+        private List<Row> _rows;
 
-        internal class Column
+        public class Column
         {
             public int Index { get; set; }
             public bool IsUnique { get; set; }
             public Dictionary<string, Row> Rows { get; set; }
         }
+
         public class Row
         {
             internal List<string> Cells { get; set; }
@@ -31,17 +32,17 @@ namespace RoyoGames.Document
             }
             public string GetValue(string columnName)
             {
-                table.Lck.EnterReadLock();
+                table._lck.EnterReadLock();
                 try
                 {
-                    if (table.columns.TryGetValue(columnName, out Column column))
+                    if (table._columns.TryGetValue(columnName, out Column column))
                     {
                         return Cells[column.Index];
                     }
                 }
                 finally
                 {
-                    table.Lck.ExitReadLock();
+                    table._lck.ExitReadLock();
                 }
 
                 return "";
@@ -49,13 +50,13 @@ namespace RoyoGames.Document
         }
         public EntityTable()
         {
-            Lck = new ReaderWriterLockSlim();
-            columns = new Dictionary<string, Column>();
-            rows = new List<Row>();
+            _lck = new ReaderWriterLockSlim();
+            _columns = new Dictionary<string, Column>();
+            _rows = new List<Row>();
         }
         public void LoadFromString(string source)
         {
-            Lck.EnterWriteLock();
+            _lck.EnterWriteLock();
             try
             {
                 using (CsvReader reader = new CsvReader(source))
@@ -69,7 +70,7 @@ namespace RoyoGames.Document
 
                         int i = 0;
 
-                        foreach (var column in columns)
+                        foreach (var column in _columns)
                         {
                             var cell = cells[i];
 
@@ -82,13 +83,13 @@ namespace RoyoGames.Document
                             i++;
                         }
 
-                        rows.Add(row);
+                        _rows.Add(row);
                     }
                 }
             }
             finally
             {
-                Lck.ExitWriteLock();
+                _lck.ExitWriteLock();
             }
         }
         private void CreateColumns(CsvReader reader)
@@ -110,17 +111,17 @@ namespace RoyoGames.Document
                 }
 
                 columnName = columnName.Trim();
-                columns.Add(columnName, column);
+                _columns.Add(columnName, column);
             }
 
             reader.Index = 1;
         }
         public Row GetRow(string uniqueColumnName, string key)
         {
-            Lck.EnterReadLock();
+            _lck.EnterReadLock();
             try
             {
-                if (columns.TryGetValue(uniqueColumnName, out Column uniqueColumn))
+                if (_columns.TryGetValue(uniqueColumnName, out Column uniqueColumn))
                 {
                     if (uniqueColumn.IsUnique)
                     {
@@ -135,76 +136,94 @@ namespace RoyoGames.Document
             }
             finally
             {
-                Lck.ExitReadLock();
+                _lck.ExitReadLock();
             }
         }
+
+        public string[] GetColumns()
+        {
+            string[] columnNames = new string[_columns.Count];
+
+            int index = 0;
+
+            foreach (var item in _columns)
+            {
+                columnNames[index] = item.Key;
+                index++;
+            }
+
+            return columnNames;
+        }
+
         public Row GetRow(int rowIndex)
         {
-            Lck.EnterReadLock();
+            _lck.EnterReadLock();
             try
             {
-                return rows[rowIndex];
+                return _rows[rowIndex];
             }
             finally
             {
-                Lck.ExitReadLock();
+                _lck.ExitReadLock();
             }
         }
         public void Clear()
         {
-            rows.Clear();
-            columns.Clear();
+            _rows.Clear();
+            _columns.Clear();
         }
     }
     public class EntityTable<T> where T : class, new()
     {
-        private List<T> rows;
-        private Dictionary<string, Dictionary<object, T>> uniqueColumns;
+        private List<T> _rows;
+        private Dictionary<string, Dictionary<object, T>> _uniqueColumns;
 
-        private ReaderWriterLockSlim lck;
+        private ReaderWriterLockSlim _lck;
 
         public int Count
         {
             get
             {
-                lck.EnterReadLock();
+                _lck.EnterReadLock();
                 try
                 {
-                    return rows.Count;
+                    return _rows.Count;
                 }
                 finally
                 {
-                    lck.ExitReadLock();
+                    _lck.ExitReadLock();
                 }
             }
         }
 
         public EntityTable()
         {
-            rows = new List<T>();
-            uniqueColumns = new Dictionary<string, Dictionary<object, T>>();
-            lck = new ReaderWriterLockSlim();
+            _rows = new List<T>();
+            _uniqueColumns = new Dictionary<string, Dictionary<object, T>>();
+            _lck = new ReaderWriterLockSlim();
         }
+
         public T GetRow(int rowIndex)
         {
-            lck.EnterReadLock();
+            _lck.EnterReadLock();
             try
             {
-                return rows[rowIndex];
+                return _rows[rowIndex];
             }
             finally
             {
-                lck.ExitReadLock();
+                _lck.ExitReadLock();
             }
         }
+
         public T GetRow(Predicate<T> predicate)
         {
-            lck.EnterReadLock();
+            _lck.EnterReadLock();
             try
             {
-                for (int i = 0; i < rows.Count; i++)
+                for (int i = 0; i < _rows.Count; i++)
                 {
-                    var row = rows[i];
+                    var row = _rows[i];
 
                     if (predicate(row))
                         return row;
@@ -214,15 +233,16 @@ namespace RoyoGames.Document
             }
             finally
             {
-                lck.ExitReadLock();
+                _lck.ExitReadLock();
             }
         }
+
         public T GetRow(string uniqColumnName, object key)
         {
-            lck.EnterReadLock();
+            _lck.EnterReadLock();
             try
             {
-                if (uniqueColumns.TryGetValue(uniqColumnName, out Dictionary<object, T> values))
+                if (_uniqueColumns.TryGetValue(uniqColumnName, out Dictionary<object, T> values))
                 {
                     if (values.TryGetValue(key, out T row))
                     {
@@ -234,19 +254,20 @@ namespace RoyoGames.Document
             }
             finally
             {
-                lck.ExitReadLock();
+                _lck.ExitReadLock();
             }
         }
+
         public List<T> GetRows(Predicate<T> predicate)
         {
-            lck.EnterReadLock();
+            _lck.EnterReadLock();
             try
             {
                 List<T> result = new List<T>();
 
-                for (int i = 0; i < rows.Count; i++)
+                for (int i = 0; i < _rows.Count; i++)
                 {
-                    var row = rows[i];
+                    var row = _rows[i];
 
                     if (predicate(row))
                         result.Add(row);
@@ -256,43 +277,46 @@ namespace RoyoGames.Document
             }
             finally
             {
-                lck.ExitReadLock();
+                _lck.ExitReadLock();
             }
         }
+
         public List<T> GetRows()
         {
-            lck.EnterReadLock();
+            _lck.EnterReadLock();
             try
             {
-                return rows.ToList();
+                return _rows.ToList();
             }
             finally
             {
-                lck.ExitReadLock();
+                _lck.ExitReadLock();
             }
         }
+
         public List<T> GetRows(int startIndex, int endIndex)
         {
-            lck.EnterReadLock();
+            _lck.EnterReadLock();
             try
             {
                 List<T> result = new List<T>();
 
                 for (int i = startIndex; i < endIndex; i++)
                 {
-                    result.Add(rows[i]);
+                    result.Add(_rows[i]);
                 }
 
                 return result;
             }
             finally
             {
-                lck.ExitReadLock();
+                _lck.ExitReadLock();
             }
         }
+
         public void LoadFromString(string source, bool hasColumns = true)
         {
-            lck.EnterWriteLock();
+            _lck.EnterWriteLock();
             try
             {
                 using (CsvReader reader = new CsvReader(source))
@@ -309,14 +333,16 @@ namespace RoyoGames.Document
             }
             finally
             {
-                lck.ExitWriteLock();
+                _lck.ExitWriteLock();
             }
         }
+
         public void Clear()
         {
-            rows.Clear();
-            uniqueColumns.Clear();
+            _rows.Clear();
+            _uniqueColumns.Clear();
         }
+
         private void AddRow(List<string> cells)
         {
             T row = new T();
@@ -335,18 +361,20 @@ namespace RoyoGames.Document
                     AddUniqValue(field.Name, value, row);
             }
 
-            rows.Add(row);
+            _rows.Add(row);
         }
+
         private void AddUniqValue(string columnName, object value, T row)
         {
-            if (!uniqueColumns.TryGetValue(columnName, out Dictionary<object, T> v))
+            if (!_uniqueColumns.TryGetValue(columnName, out Dictionary<object, T> v))
             {
                 v = new Dictionary<object, T>();
-                uniqueColumns.Add(columnName, v);
+                _uniqueColumns.Add(columnName, v);
             }
 
             v.Add(value, row);
         }
+
         private object StringToObject(Type type, string str)
         {
             if (type.IsEnum)
