@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEditor.Experimental.GraphView;
 
 public class GlobalTransition<TStateId, TBlackBoard> : ITransition<TStateId, TBlackBoard>
 {
