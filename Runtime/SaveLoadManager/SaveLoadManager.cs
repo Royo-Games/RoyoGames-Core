@@ -1,4 +1,5 @@
 using Unity.Collections;
+using UnityEditor.Overlays;
 using UnityEngine;
 
 public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, new()
@@ -35,13 +36,16 @@ public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, 
         {
             data = CloneDefault();
             data.DataVersionNumber = DataVersionNumber;
-            SavedData = InitData(data);
+
+            InitData(data);
+            SavedData = data;
         }
         else
         {
             if(data.DataVersionNumber < DataVersionNumber)
             {
-                SavedData = MigrateData(data, data.DataVersionNumber, DataVersionNumber);
+                MigrateData(data, data.DataVersionNumber, DataVersionNumber);
+                SavedData = data;
                 SavedData.DataVersionNumber = DataVersionNumber;
             }
             else
@@ -64,14 +68,13 @@ public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, 
         if (focus == false) Save();
     }
 
-    protected virtual T MigrateData(T oldData, int oldVer, int newVer)
+    protected virtual void MigrateData(T oldData, int oldVer, int newVer)
     {
-        return oldData;
+
     }
 
-    protected virtual T InitData(T data)
+    protected virtual void InitData(T data)
     {
-        return data;
     }
 
     private T CloneDefault()
