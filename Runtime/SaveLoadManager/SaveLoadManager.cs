@@ -5,7 +5,7 @@ public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, 
     [SerializeField] string _dataKey;
     [SerializeField] private int _dataVersionNumber;
     [Space]
-    [SerializeReference] T _savedData;
+    [SerializeField] T _savedData;
 
     public T SavedData
     {
