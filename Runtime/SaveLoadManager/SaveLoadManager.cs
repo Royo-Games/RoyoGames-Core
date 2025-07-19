@@ -1,3 +1,4 @@
+using Unity.Collections;
 using UnityEngine;
 
 public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, new()
@@ -31,12 +32,17 @@ public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, 
         var data = JsonUtility.FromJson<T>(PlayerPrefs.GetString(_dataKey, ""));
 
         if (data == null)
-            SavedData = CloneDefault();
+        {
+            data = CloneDefault();
+            data.DataVersionNumber = DataVersionNumber;
+            SavedData = InitData(data);
+        }
         else
         {
-            if(SavedData.DataVersionNumber < DataVersionNumber)
+            if(data.DataVersionNumber < DataVersionNumber)
             {
-                SavedData = Migrate(data, data.DataVersionNumber, DataVersionNumber);
+                SavedData = MigrateData(data, data.DataVersionNumber, DataVersionNumber);
+                SavedData.DataVersionNumber = DataVersionNumber;
             }
             else
             {
@@ -49,8 +55,6 @@ public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, 
     {
         if (SavedData == null) return;
 
-        SavedData.DataVersionNumber = DataVersionNumber;
-
         PlayerPrefs.SetString(_dataKey, JsonUtility.ToJson(SavedData));
         PlayerPrefs.Save();
     }
@@ -60,9 +64,14 @@ public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, 
         if (focus == false) Save();
     }
 
-    protected virtual T Migrate(T oldData, int oldVer, int newVer)
+    protected virtual T MigrateData(T oldData, int oldVer, int newVer)
     {
         return oldData;
+    }
+
+    protected virtual T InitData(T data)
+    {
+        return data;
     }
 
     private T CloneDefault()
