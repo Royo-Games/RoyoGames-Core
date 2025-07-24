@@ -1,5 +1,3 @@
-using Unity.Collections;
-using UnityEditor.Overlays;
 using UnityEngine;
 
 public abstract class SaveLoadManager<T> : MonoBehaviour where T : SavableData, new()
